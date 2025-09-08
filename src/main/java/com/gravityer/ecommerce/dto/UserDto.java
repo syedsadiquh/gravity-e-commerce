@@ -9,4 +9,9 @@ public class UserDto {
     private Long id;
     private String username;
     private String email;
+
+    @Override
+    public String toString() {
+        return "{"+this.id+", "+this.username+", "+this.email+"}\n";
+    }
 }
