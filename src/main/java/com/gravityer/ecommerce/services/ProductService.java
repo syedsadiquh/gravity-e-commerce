@@ -6,6 +6,8 @@ import com.gravityer.ecommerce.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -68,4 +70,14 @@ public class ProductService {
         }
     }
 
+    public BaseResponse<Page<Product>> listProducts(PageRequest pageable) {
+        try {
+            var res = productRepository.findAll(pageable);
+            if (res.isEmpty()) return new BaseResponse<>(true, "No Products Exists", null);
+            return new BaseResponse<>(true, "All Products", res);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return new BaseResponse<>(false, "Internal Server Error", null);
+        }
+    }
 }
