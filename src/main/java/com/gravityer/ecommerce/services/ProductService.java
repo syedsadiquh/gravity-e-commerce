@@ -1,6 +1,8 @@
 package com.gravityer.ecommerce.services;
 
 import com.gravityer.ecommerce.controller.BaseResponse;
+import com.gravityer.ecommerce.dto.ProductDto;
+import com.gravityer.ecommerce.mapper.ProductMapper;
 import com.gravityer.ecommerce.models.Product;
 import com.gravityer.ecommerce.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
@@ -18,6 +20,8 @@ public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+    @Autowired
+    private ProductMapper productMapper;
 
     public BaseResponse<List<Product>> getProducts() {
         return new BaseResponse<>(true, "All Products", productRepository.findAll());
@@ -47,10 +51,10 @@ public class ProductService {
     }
 
     @Transactional
-    public BaseResponse<Product> updateProduct(long productId, Product product) {
+    public BaseResponse<ProductDto> updateProduct(long productId, Product product) {
         try {
             var res = productRepository.updateProductById(productId, product.getProductName(), product.getDescription(), product.getPrice(), product.getQuantity());
-            if (res == 1) return new BaseResponse<>(true, "Product Updated", product);
+            if (res == 1) return new BaseResponse<>(true, "Product Updated", productMapper.toDto(product));
             return new BaseResponse<>(false, "Product not found", null);
         } catch (Exception e) {
             log.error(e.getMessage());
