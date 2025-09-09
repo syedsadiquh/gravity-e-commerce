@@ -5,17 +5,16 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import lombok.*;
 
-@Entity(name = "_user")
+@Entity(name = "customers")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class Customer {
     @Id
     @GeneratedValue
     private Long id;
-    private String username;
-    private String password;
+    private String name;
     private String email;
 }
