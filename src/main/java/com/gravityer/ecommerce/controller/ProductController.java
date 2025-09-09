@@ -1,5 +1,6 @@
 package com.gravityer.ecommerce.controller;
 
+import com.gravityer.ecommerce.dto.ProductDto;
 import com.gravityer.ecommerce.models.Product;
 import com.gravityer.ecommerce.services.ProductService;
 import jakarta.validation.Valid;
@@ -47,7 +48,7 @@ public class ProductController {
 
     // Update Product
     @PutMapping("/updateProduct/{productId}")
-    public ResponseEntity<BaseResponse<Product>> updateProduct(@PathVariable long productId, @RequestBody Product product) {
+    public ResponseEntity<BaseResponse<ProductDto>> updateProduct(@PathVariable long productId, @RequestBody Product product) {
         var response = productService.updateProduct(productId, product);
         if (response.isSuccess()) return ResponseEntity.ok(response);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
