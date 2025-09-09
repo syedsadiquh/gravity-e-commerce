@@ -2,6 +2,7 @@ package com.gravityer.ecommerce.controller;
 
 import com.gravityer.ecommerce.models.Product;
 import com.gravityer.ecommerce.services.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class ProductController {
 
     // Add Product
     @PostMapping("/addProduct")
-    public ResponseEntity<BaseResponse<Product>> addProduct(@RequestBody Product product) {
+    public ResponseEntity<BaseResponse<Product>> addProduct(@Valid @RequestBody Product product) {
         var response = productService.addProduct(product);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
