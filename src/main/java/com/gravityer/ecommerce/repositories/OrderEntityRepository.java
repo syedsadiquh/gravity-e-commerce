@@ -36,4 +36,6 @@ public interface OrderEntityRepository extends JpaRepository<OrderEntity, Long> 
            "GROUP BY p.id, p.name, p.price " +
            "ORDER BY SUM(oi.quantity * p.price) DESC")
     List<ProductSalesDto> getTotalSalesPerProduct();
+
+    List<OrderEntity> findByCustomerId(Long customerId);
 }

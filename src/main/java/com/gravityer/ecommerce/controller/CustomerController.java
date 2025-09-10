@@ -3,17 +3,18 @@ package com.gravityer.ecommerce.controller;
 import com.gravityer.ecommerce.dto.CustomerDto;
 import com.gravityer.ecommerce.models.Customer;
 import com.gravityer.ecommerce.services.CustomerService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class CustomerController {
 
-    @Autowired
-    private CustomerService customerService;
+    private final CustomerService customerService;
 
     @GetMapping("/getAllCustomers")
     public ResponseEntity<BaseResponse<List<Customer>>> getAllCustomers() {
@@ -26,6 +27,7 @@ public class CustomerController {
     public ResponseEntity<BaseResponse<Customer>> getCustomerById(@PathVariable Long customerId) {
         var res = customerService.getCustomerById(customerId);
         if (res.isSuccess()) return ResponseEntity.ok(res);
+        if (res.getMessage().equals("Customer not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
         return ResponseEntity.internalServerError().body(res);
     }
 
@@ -46,6 +48,14 @@ public class CustomerController {
     @DeleteMapping("/deleteCustomer/{customer_id}")
     public ResponseEntity<BaseResponse<Customer>> deleteCustomer(@PathVariable Long customer_id) {
         var res = customerService.deleteCustomer(customer_id);
+        if (res.isSuccess()) return ResponseEntity.ok(res);
+        return ResponseEntity.internalServerError().body(res);
+    }
+
+
+    @GetMapping("/getCustomersWithMoreThanThreeOrders")
+    public ResponseEntity<BaseResponse<List<Customer>>> getCustomersWithMoreThanThreeOrders() {
+        var res = customerService.getCustomersWithMoreThanThreeOrders();
         if (res.isSuccess()) return ResponseEntity.ok(res);
         return ResponseEntity.internalServerError().body(res);
     }

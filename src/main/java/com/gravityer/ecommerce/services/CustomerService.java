@@ -9,6 +9,7 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -49,6 +50,7 @@ public class CustomerService {
     public BaseResponse<Customer> addCustomer(CustomerDto customerDto) {
         try {
             var customer = customerMapper.toEntity(customerDto);
+            customer.setCreatedAt(LocalDateTime.now());
             var newCustomer = customerRepository.save(customer);
             return new BaseResponse<>(true, "Customer Added Successfully", newCustomer);
         } catch (Exception e) {
@@ -64,6 +66,7 @@ public class CustomerService {
             if (res == null) return new BaseResponse<>(false, "Customer Not Found", null);
             if (customerDto.getName()!=null) res.setName(customerDto.getName());
             if (customerDto.getEmail()!=null) res.setEmail(customerDto.getEmail());
+            res.setUpdatedAt(LocalDateTime.now());
             customerRepository.saveAndFlush(res);
             return new BaseResponse<>(true, "Customer Updated Successfully", res);
         } catch (Exception e) {
@@ -82,6 +85,20 @@ public class CustomerService {
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return new BaseResponse<>(false, "Error deleting customer", null);
+        }
+    }
+    
+    // more than 3 orders
+    public BaseResponse<List<Customer>> getCustomersWithMoreThanThreeOrders() {
+        try {
+            List<Customer> customers = customerRepository.findCustomersWithMoreThanThreeOrders();
+            if (customers.isEmpty()) {
+                return new BaseResponse<>(true, "No customers found with more than three orders", null);
+            }
+            return new BaseResponse<>(true, "Retrieved customers with more than three orders", customers);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return new BaseResponse<>(false, "Error retrieving customers with more than three orders", null);
         }
     }
 }

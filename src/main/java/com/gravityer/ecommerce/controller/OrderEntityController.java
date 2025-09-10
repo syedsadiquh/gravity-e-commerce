@@ -64,9 +64,7 @@ public class OrderEntityController {
     @GetMapping("/getOrdersWithDetails")
     public ResponseEntity<BaseResponse<List<OrderDetailDto>>> getOrdersWithCustomerAndProductDetails() {
         var response = orderEntityService.getOrdersWithCustomerAndProductDetails();
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        }
+        if (response.isSuccess()) return ResponseEntity.ok(response);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
     
@@ -74,9 +72,7 @@ public class OrderEntityController {
     @GetMapping("/getTotalSpendPerCustomer")
     public ResponseEntity<BaseResponse<List<CustomerSpendDto>>> getTotalSpendPerCustomer() {
         var response = orderEntityService.getTotalSpendPerCustomer();
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        }
+        if (response.isSuccess()) return ResponseEntity.ok(response);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
     
@@ -84,9 +80,36 @@ public class OrderEntityController {
     @GetMapping("/getTotalSalesPerProduct")
     public ResponseEntity<BaseResponse<List<ProductSalesDto>>> getTotalSalesPerProduct() {
         var response = orderEntityService.getTotalSalesPerProduct();
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        }
+        if (response.isSuccess()) return ResponseEntity.ok(response);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // get orders by customer id
+    @GetMapping("/getOrdersByCustomerId/{customerId}")
+    public ResponseEntity<BaseResponse<List<OrderEntity>>> getOrdersByCustomerId(@PathVariable Long customerId) {
+        var response = orderEntityService.getOrdersByCustomerId(customerId);
+        if (response.isSuccess()) return ResponseEntity.ok(response);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    /*
+    To remember for later:
+    REQUEST EXAMPLE:
+        {
+          "customer_id": 152,
+          "order_date": "10-09-2025",
+          "orderItemDtos": [
+            {"productId": 1, "quantity": 2},
+            {"productId": 2, "quantity": 2},
+            {"productId": 3, "quantity": 3}
+          ]
+        }
+
+     */
+    @PostMapping("/placeOrder")
+    public ResponseEntity<BaseResponse<OrderEntity>> placeOrder(@RequestBody PlaceOrderDto placeOrderDto) {
+        var res = orderEntityService.placeOrder(placeOrderDto);
+        if (res.isSuccess()) return ResponseEntity.ok(res);
+        return ResponseEntity.internalServerError().body(res);
     }
 }

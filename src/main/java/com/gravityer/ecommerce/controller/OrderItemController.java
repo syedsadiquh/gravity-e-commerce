@@ -1,10 +1,7 @@
 package com.gravityer.ecommerce.controller;
 
 import com.gravityer.ecommerce.dto.OrderItemDto;
-import com.gravityer.ecommerce.dto.ProductDto;
 import com.gravityer.ecommerce.models.OrderItem;
-import com.gravityer.ecommerce.models.Product;
-import com.gravityer.ecommerce.repositories.OrderItemRepository;
 import com.gravityer.ecommerce.services.OrderItemService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

@@ -4,7 +4,7 @@ import com.gravityer.ecommerce.dto.ProductDto;
 import com.gravityer.ecommerce.models.Product;
 import com.gravityer.ecommerce.services.ProductService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -15,15 +15,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class ProductController {
 
-    @Autowired
-    private ProductService productService;
+    private final ProductService productService;
 
     // Add Product
     @PostMapping("/addProduct")
-    public ResponseEntity<BaseResponse<Product>> addProduct(@Valid @RequestBody Product product) {
-        var response = productService.addProduct(product);
+    public ResponseEntity<BaseResponse<Product>> addProduct(@Valid @RequestBody ProductDto productDto) {
+        var response = productService.addProduct(productDto);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         }
@@ -48,8 +48,8 @@ public class ProductController {
 
     // Update Product
     @PutMapping("/updateProduct/{productId}")
-    public ResponseEntity<BaseResponse<ProductDto>> updateProduct(@PathVariable long productId, @RequestBody Product product) {
-        var response = productService.updateProduct(productId, product);
+    public ResponseEntity<BaseResponse<Product>> updateProduct(@PathVariable long productId, @RequestBody ProductDto productDto) {
+        var response = productService.updateProduct(productId, productDto);
         if (response.isSuccess()) return ResponseEntity.ok(response);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
