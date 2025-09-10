@@ -1,5 +1,6 @@
-package com.gravityer.ecommerce.controller;
+package com.gravityer.ecommerce.exceptions;
 
+import com.gravityer.ecommerce.controller.BaseResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -20,5 +21,11 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .toList();
         return new ResponseEntity<>(new BaseResponse<>(false, "Required Argument Missing", errors), HttpStatus.BAD_REQUEST);
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(ItemNotFoundException.class)
+    public ResponseEntity<BaseResponse<String>> orderItemNotFound(ItemNotFoundException exception) {
+        return new ResponseEntity<>(new BaseResponse<>(false, "Things didn't worked out...", exception.getMessage()), HttpStatus.BAD_REQUEST);
     }
 }

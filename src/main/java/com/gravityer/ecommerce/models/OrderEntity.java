@@ -1,13 +1,14 @@
 package com.gravityer.ecommerce.models;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity(name = "orders")
@@ -24,8 +25,9 @@ public class OrderEntity {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    private LocalDateTime order_date;
+    private LocalDate order_date;
 
+    @JsonManagedReference
     @OneToMany(mappedBy="orders", cascade=CascadeType.ALL, orphanRemoval=true)
-    private List<OrderItem> items = new ArrayList<>();
+    private List<OrderItem> items;
 }
