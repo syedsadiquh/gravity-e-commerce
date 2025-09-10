@@ -6,22 +6,23 @@ import com.gravityer.ecommerce.mapper.ProductMapper;
 import com.gravityer.ecommerce.models.Product;
 import com.gravityer.ecommerce.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ProductService {
 
-    @Autowired
-    private ProductRepository productRepository;
-    @Autowired
-    private ProductMapper productMapper;
+    private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
 
     public BaseResponse<List<Product>> getProducts() {
         return new BaseResponse<>(true, "All Products", productRepository.findAll());
@@ -40,8 +41,10 @@ public class ProductService {
     }
 
     @Transactional
-    public BaseResponse<Product> addProduct(Product product) {
+    public BaseResponse<Product> addProduct(ProductDto productDto) {
         try{
+            Product product = productMapper.toEntity(productDto);
+            product.setCreatedAt(LocalDateTime.now());
             productRepository.saveAndFlush(product);
             return new BaseResponse<>(true, "Product Created", product);
         } catch(Exception e){
@@ -51,11 +54,15 @@ public class ProductService {
     }
 
     @Transactional
-    public BaseResponse<ProductDto> updateProduct(long productId, Product product) {
+    public BaseResponse<Product> updateProduct(long productId, ProductDto productDto) {
         try {
-            var res = productRepository.updateProductById(productId, product.getName(), product.getPrice());
-            if (res == 1) return new BaseResponse<>(true, "Product Updated", productMapper.toDto(product));
-            return new BaseResponse<>(false, "Product not found", null);
+            Product product = productRepository.findById(productId).orElse(null);
+            if (product == null) return new BaseResponse<>(false, "Product not found", null);
+            product.setName(productDto.getName());
+            product.setPrice(productDto.getPrice());
+            product.setUpdatedAt(LocalDateTime.now());
+            var res = productRepository.saveAndFlush(product);
+            return new BaseResponse<>(true, "Product Updated", res);
         } catch (Exception e) {
             log.error(e.getMessage());
             return new BaseResponse<>(false, "Error updating product: " + e.getMessage(), null);

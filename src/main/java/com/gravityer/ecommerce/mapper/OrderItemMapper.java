@@ -13,6 +13,8 @@ public interface OrderItemMapper {
     @Mapping(target = "product", source = "productId", qualifiedByName = "mapProduct")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "orders", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     OrderItem toEntity(OrderItemDto dto);
 
     @Mapping(target = "productId", source = "product.id")

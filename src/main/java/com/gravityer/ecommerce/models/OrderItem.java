@@ -2,17 +2,17 @@ package com.gravityer.ecommerce.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+
 
 @Entity(name = "order_items")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class OrderItem {
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+public class OrderItem extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

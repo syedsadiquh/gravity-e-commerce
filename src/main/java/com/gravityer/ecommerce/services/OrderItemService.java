@@ -8,21 +8,20 @@ import com.gravityer.ecommerce.models.Product;
 import com.gravityer.ecommerce.repositories.OrderItemRepository;
 import com.gravityer.ecommerce.repositories.ProductRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OrderItemService {
-    @Autowired
-    private OrderItemRepository orderItemRepository;
-    @Autowired
-    private OrderItemMapper orderItemMapper;
-    @Autowired
-    private ProductRepository productRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderItemMapper orderItemMapper;
+    private final ProductRepository productRepository;
 
     public BaseResponse<List<OrderItem>> findAllOrderItems() {
         try {
@@ -56,6 +55,7 @@ public class OrderItemService {
                     .orElseThrow(() -> new RuntimeException("Product not found"));
 
             orderItem.setProduct(product);
+            orderItem.setCreatedAt(LocalDateTime.now());
             orderItemRepository.save(orderItem);
             return new BaseResponse<>(true, "Order Item Added Successfully", orderItem);
         } catch (Exception e) {
@@ -73,6 +73,7 @@ public class OrderItemService {
             if (product == null) return new BaseResponse<>(false, "Product Not Found", null);
             result.setProduct(product);
             result.setQuantity(orderItemDto.getQuantity());
+            result.setUpdatedAt(LocalDateTime.now());
             orderItemRepository.save(result);
             return new BaseResponse<>(true, "Order Item Updated Successfully", result);
         } catch (Exception e) {

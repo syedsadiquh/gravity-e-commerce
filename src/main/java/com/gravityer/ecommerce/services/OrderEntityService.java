@@ -4,7 +4,6 @@ import com.gravityer.ecommerce.controller.BaseResponse;
 import com.gravityer.ecommerce.dto.*;
 import com.gravityer.ecommerce.exceptions.ItemNotFoundException;
 import com.gravityer.ecommerce.mapper.OrderEntityMapper;
-import com.gravityer.ecommerce.mapper.OrderItemMapper;
 import com.gravityer.ecommerce.models.Customer;
 import com.gravityer.ecommerce.models.OrderEntity;
 import com.gravityer.ecommerce.models.OrderItem;
@@ -12,26 +11,21 @@ import com.gravityer.ecommerce.repositories.CustomerRepository;
 import com.gravityer.ecommerce.repositories.OrderEntityRepository;
 import com.gravityer.ecommerce.repositories.OrderItemRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OrderEntityService {
-    @Autowired
-    private OrderEntityRepository orderEntityRepository;
-    @Autowired
-    private OrderEntityMapper orderEntityMapper;
-    @Autowired
-    private CustomerRepository customerRepository;
-    @Autowired
-    private OrderItemMapper orderItemMapper;
-    @Autowired
-    private OrderItemRepository orderItemRepository;
+    private final OrderEntityRepository orderEntityRepository;
+    private final CustomerRepository customerRepository;
+    private final OrderItemRepository orderItemRepository;
 
     public BaseResponse<List<OrderEntity>> getAllOrderEntity() {
         try {
@@ -71,6 +65,7 @@ public class OrderEntityService {
 
         OrderEntity finalOrderEntity = orderEntity;
         items.forEach(item -> item.setOrders(finalOrderEntity));
+        orderEntity.setCreatedAt(LocalDateTime.now());
         orderEntity.setItems(items);
 
         try {
@@ -97,12 +92,13 @@ public class OrderEntityService {
                 .map(addEntityId -> orderItemRepository.findById(addEntityId)
                         .orElseThrow(() -> new ItemNotFoundException("Order Item not found with id: " + addEntityId)))
                 .toList();
-
         orderEntity.getItems().clear(); // delete and readd new ones...
         for (OrderItem item : items) {
             item.setOrders(orderEntity);
             orderEntity.getItems().add(item);
         }
+
+        orderEntity.setUpdatedAt(LocalDateTime.now());
 
         try {
 
@@ -207,6 +203,19 @@ public class OrderEntityService {
         } catch (Exception e) {
             log.error("Error retrieving total sales per product: {}", e.getMessage(), e);
             return new BaseResponse<>(false, "Error retrieving total sales per product", null);
+        }
+    }
+
+    // get orders for customer id
+    public BaseResponse<List<OrderEntity>> getOrdersByCustomerId(Long customerId) {
+        try {
+            List<OrderEntity> orders = orderEntityRepository.findByCustomerId(customerId);
+            if (orders.isEmpty()) return new BaseResponse<>(true, "No orders found for customer id: " + customerId, new ArrayList<>());
+
+            return new BaseResponse<>(true, "Orders for customer id: " + customerId, orders);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return new BaseResponse<>(false , "Internal Server Error", null);
         }
     }
 }

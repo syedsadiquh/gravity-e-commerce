@@ -12,6 +12,8 @@ public interface OrderEntityMapper {
 
     @Mapping(target = "customer", source = "customer_id", qualifiedByName = "mapCustomer")
     @Mapping(target = "id", ignore = true) // auto-generated
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     OrderEntity toEntity(OrderEntityDto dto);
 
     @Mapping(target = "customer_id", source = "customer.id")
@@ -25,4 +27,3 @@ public interface OrderEntityMapper {
         return c;
     }
 }
-

@@ -3,6 +3,7 @@ package com.gravityer.ecommerce.controller;
 import com.gravityer.ecommerce.dto.CustomerDto;
 import com.gravityer.ecommerce.models.Customer;
 import com.gravityer.ecommerce.services.CustomerService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,10 +11,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class CustomerController {
 
-    @Autowired
-    private CustomerService customerService;
+    private final CustomerService customerService;
 
     @GetMapping("/getAllCustomers")
     public ResponseEntity<BaseResponse<List<Customer>>> getAllCustomers() {
@@ -46,6 +47,14 @@ public class CustomerController {
     @DeleteMapping("/deleteCustomer/{customer_id}")
     public ResponseEntity<BaseResponse<Customer>> deleteCustomer(@PathVariable Long customer_id) {
         var res = customerService.deleteCustomer(customer_id);
+        if (res.isSuccess()) return ResponseEntity.ok(res);
+        return ResponseEntity.internalServerError().body(res);
+    }
+
+
+    @GetMapping("/getCustomersWithMoreThanThreeOrders")
+    public ResponseEntity<BaseResponse<List<Customer>>> getCustomersWithMoreThanThreeOrders() {
+        var res = customerService.getCustomersWithMoreThanThreeOrders();
         if (res.isSuccess()) return ResponseEntity.ok(res);
         return ResponseEntity.internalServerError().body(res);
     }
