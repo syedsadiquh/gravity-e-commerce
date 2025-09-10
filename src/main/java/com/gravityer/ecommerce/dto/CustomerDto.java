@@ -5,9 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class ProductDto {
+@NoArgsConstructor
+public class CustomerDto {
     private String name;
-    private double price;
+    private String email;
 }

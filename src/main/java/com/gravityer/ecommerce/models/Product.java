@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-@Entity
+@Entity(name = "products")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,14 +19,8 @@ public class Product {
 
     @NotEmpty
     @Size(max = 100)
-    private String productName;
-
-    @NotEmpty
-    private String description;
+    private String name;
 
     @Min(0)
     private double price;
-
-    @Min(0)
-    private int quantity;
 }

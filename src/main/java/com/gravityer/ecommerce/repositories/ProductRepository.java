@@ -11,8 +11,8 @@ import org.springframework.stereotype.Repository;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Product p SET p.productName=:productName, p.description=:description, p.price=:price, p.quantity=:quantity WHERE p.id=:id")
-    public int updateProductById(Long id, String productName, String description, double price, int quantity);
+    @Query("UPDATE products p SET p.name=:productName, p.price=:price WHERE p.id=:id")
+    public int updateProductById(Long id, String productName, double price);
 
     public int deleteProductById(Long id);
 

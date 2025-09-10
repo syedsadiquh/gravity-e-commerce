@@ -53,7 +53,7 @@ public class ProductService {
     @Transactional
     public BaseResponse<ProductDto> updateProduct(long productId, Product product) {
         try {
-            var res = productRepository.updateProductById(productId, product.getProductName(), product.getDescription(), product.getPrice(), product.getQuantity());
+            var res = productRepository.updateProductById(productId, product.getName(), product.getPrice());
             if (res == 1) return new BaseResponse<>(true, "Product Updated", productMapper.toDto(product));
             return new BaseResponse<>(false, "Product not found", null);
         } catch (Exception e) {
