@@ -26,6 +26,7 @@ public class OrderEntityService {
     private final OrderEntityRepository orderEntityRepository;
     private final CustomerRepository customerRepository;
     private final OrderItemRepository orderItemRepository;
+    private final OrderItemService orderItemService;
 
     public BaseResponse<List<OrderEntity>> getAllOrderEntity() {
         try {
@@ -217,5 +218,30 @@ public class OrderEntityService {
             log.error(e.getMessage(), e);
             return new BaseResponse<>(false , "Internal Server Error", null);
         }
+    }
+
+    // Place Order Atomically
+    @Transactional(rollbackOn = ItemNotFoundException.class)
+    public  BaseResponse<OrderEntity> placeOrder(PlaceOrderDto placeOrderDto) {
+        Customer customer = customerRepository.findById(placeOrderDto.getCustomer_id())
+                .orElseThrow(() -> new ItemNotFoundException("Customer not found with id: " + placeOrderDto.getCustomer_id()));
+
+        // new order items
+        List<OrderItem> items = new ArrayList<>();
+        for (OrderItemDto itemDto : placeOrderDto.getOrderItemDtos()) {
+            var res = orderItemService.addOrderItem(itemDto).getData();     // create new order item
+            if (res == null) throw new ItemNotFoundException("Failed to create order item for product id: " + itemDto.getProductId());
+            items.add(res);
+        }
+
+        // create order entity
+        AddOrderEntityDto addOrderDto = new AddOrderEntityDto();
+        addOrderDto.setCustomer_id(placeOrderDto.getCustomer_id());
+        addOrderDto.setOrder_date(placeOrderDto.getOrder_date());
+        addOrderDto.setOrderItemIds(items.stream().map(OrderItem::getId).toList());
+        var orderRes = this.addOrderEntity(addOrderDto).getData();      // create new order entity
+
+        return new BaseResponse<>(true, "Order placed successfully", orderRes);
+
     }
 }

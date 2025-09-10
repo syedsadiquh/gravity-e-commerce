@@ -91,4 +91,25 @@ public class OrderEntityController {
         if (response.isSuccess()) return ResponseEntity.ok(response);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
+
+    /*
+    To remember for later:
+    REQUEST EXAMPLE:
+        {
+          "customer_id": 152,
+          "order_date": "10-09-2025",
+          "orderItemDtos": [
+            {"productId": 1, "quantity": 2},
+            {"productId": 2, "quantity": 2},
+            {"productId": 3, "quantity": 3}
+          ]
+        }
+
+     */
+    @PostMapping("/placeOrder")
+    public ResponseEntity<BaseResponse<OrderEntity>> placeOrder(@RequestBody PlaceOrderDto placeOrderDto) {
+        var res = orderEntityService.placeOrder(placeOrderDto);
+        if (res.isSuccess()) return ResponseEntity.ok(res);
+        return ResponseEntity.internalServerError().body(res);
+    }
 }

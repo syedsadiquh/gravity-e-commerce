@@ -2,6 +2,7 @@ package com.gravityer.ecommerce.services;
 
 import com.gravityer.ecommerce.controller.BaseResponse;
 import com.gravityer.ecommerce.dto.OrderItemDto;
+import com.gravityer.ecommerce.exceptions.ItemNotFoundException;
 import com.gravityer.ecommerce.mapper.OrderItemMapper;
 import com.gravityer.ecommerce.models.OrderItem;
 import com.gravityer.ecommerce.models.Product;
@@ -52,7 +53,7 @@ public class OrderItemService {
             var orderItem = orderItemMapper.toEntity(orderItemDto);
 
             Product product = productRepository.findById(orderItemDto.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+                    .orElseThrow(() -> new ItemNotFoundException("Product not found"));
 
             orderItem.setProduct(product);
             orderItem.setCreatedAt(LocalDateTime.now());
