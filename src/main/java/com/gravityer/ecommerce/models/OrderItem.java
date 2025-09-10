@@ -7,6 +7,12 @@ import lombok.experimental.SuperBuilder;
 
 
 @Entity(name = "order_items")
+@Table(
+        indexes = {
+                @Index(name = "idx_order_items_orders_id", columnList = "orders_id"),
+                @Index(name = "idx_order_items_product_id", columnList = "product_id")
+        }
+)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

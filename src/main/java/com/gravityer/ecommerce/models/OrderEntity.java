@@ -9,6 +9,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity(name = "orders")
+@Table(
+        indexes = {
+                @Index(name = "idx_orders_customer_id", columnList = "customer_id"),
+        }
+)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

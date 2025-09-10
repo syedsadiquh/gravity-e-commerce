@@ -5,6 +5,7 @@ import com.gravityer.ecommerce.models.Customer;
 import com.gravityer.ecommerce.services.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +28,7 @@ public class CustomerController {
     public ResponseEntity<BaseResponse<Customer>> getCustomerById(@PathVariable Long customerId) {
         var res = customerService.getCustomerById(customerId);
         if (res.isSuccess()) return ResponseEntity.ok(res);
+        if (res.getMessage().equals("Customer not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
         return ResponseEntity.internalServerError().body(res);
     }
 
