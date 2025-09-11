@@ -1,7 +1,10 @@
 package com.gravityer.ecommerce.controller;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.gravityer.ecommerce.dto.AvgRatingCustomerDto;
+import com.gravityer.ecommerce.dto.FeedbackPerCity;
 import com.gravityer.ecommerce.dto.MongoFeedbackDto;
+import com.gravityer.ecommerce.models.BaseEntity;
 import com.gravityer.ecommerce.models.MongoFeedback;
 import com.gravityer.ecommerce.services.MongoFeedbackService;
 import jakarta.validation.Valid;
@@ -71,6 +74,34 @@ public class MongoFeedbackController {
         var res = feedbackService.deleteFeedback(feedbackId);
         if (res.isSuccess()) return ResponseEntity.ok(res);
         if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
+        return ResponseEntity.internalServerError().body(res);
+    }
+
+    @GetMapping("/mongo/getFeedbackGteFour")
+    public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbackGteFour() {
+        var res = feedbackService.getFeedbacksGreaterThanEqualToFour();
+        if (res.isSuccess()) return ResponseEntity.ok(res);
+        return ResponseEntity.internalServerError().body(res);
+    }
+
+    @GetMapping("/mongo/getFeedbackFromCity/{city}")
+    public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbackFromCity(@PathVariable String city) {
+        var res = feedbackService.getFeedbacksFromCity(city);
+        if (res.isSuccess()) return ResponseEntity.ok(res);
+        return ResponseEntity.internalServerError().body(res);
+    }
+
+    @GetMapping("/mongo/getAvgRatingPerCustomer")
+    public ResponseEntity<BaseResponse<List<AvgRatingCustomerDto>>> getAvgRatingPerCustomer() {
+        var res = feedbackService.getAvgRatingPerCustomer();
+        if (res.isSuccess()) return ResponseEntity.ok(res);
+        return ResponseEntity.internalServerError().body(res);
+    }
+
+    @GetMapping("/mongo/getFeedbackCountPerCity")
+    public ResponseEntity<BaseResponse<List<FeedbackPerCity>>> getFeedbackCountPerCity() {
+        var res = feedbackService.getTotalFeedbacksPerCity();
+        if (res.isSuccess()) return ResponseEntity.ok(res);
         return ResponseEntity.internalServerError().body(res);
     }
 

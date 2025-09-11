@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
@@ -20,9 +21,9 @@ import java.time.LocalDate;
 @Document(collection = "feedbacks")
 public class MongoFeedback extends BaseEntity {
     @Id
-    private String id;
+    private ObjectId id;
 
-    private String customer;
+    private ObjectId customer;
 
     @Min(1) @Max(5)
     private Integer rating;
