@@ -1,4 +1,4 @@
-package com.gravityer.ecommerce.repositories;
+package com.gravityer.ecommerce.repositories.jpa;
 
 import com.gravityer.ecommerce.models.Product;
 import jakarta.transaction.Transactional;
