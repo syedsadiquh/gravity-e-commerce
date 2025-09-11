@@ -3,6 +3,7 @@ package com.gravityer.ecommerce.controller;
 import com.gravityer.ecommerce.dto.MongoCustomerDto;
 import com.gravityer.ecommerce.models.MongoCustomers;
 import com.gravityer.ecommerce.services.MongoCustomerService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ public class MongoCustomerController {
     }
 
     @PostMapping("/mongo/addCustomer")
-    public ResponseEntity<BaseResponse<MongoCustomers>> addCustomer(@RequestBody MongoCustomerDto mongoCustomerDto) {
+    public ResponseEntity<BaseResponse<MongoCustomers>> addCustomer(@Valid @RequestBody MongoCustomerDto mongoCustomerDto) {
         var res = mongoCustomerService.addCustomer(mongoCustomerDto);
         if (res.isSuccess()) return ResponseEntity.ok(res);
         return ResponseEntity.internalServerError().body(res);
