@@ -1,5 +1,6 @@
 package com.gravityer.ecommerce.controller;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.gravityer.ecommerce.dto.MongoFeedbackDto;
 import com.gravityer.ecommerce.models.MongoFeedback;
 import com.gravityer.ecommerce.services.MongoFeedbackService;
@@ -9,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -36,6 +39,14 @@ public class MongoFeedbackController {
         var res = feedbackService.getFeedbacksByCustomerId(customerId);
         if (res.isSuccess()) return ResponseEntity.ok(res);
         if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
+        return ResponseEntity.internalServerError().body(res);
+    }
+
+    @GetMapping("/mongo/getFeedbacksByDate/{date}")
+    public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbacksByDate(@PathVariable String date) {
+        LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+        var res = feedbackService.getFeedbacksByDate(localDate);
+        if (res.isSuccess()) return ResponseEntity.ok(res);
         return ResponseEntity.internalServerError().body(res);
     }
 

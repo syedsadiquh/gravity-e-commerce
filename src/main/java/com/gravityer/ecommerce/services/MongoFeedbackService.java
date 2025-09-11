@@ -49,6 +49,16 @@ public class MongoFeedbackService {
         }
     }
 
+    public BaseResponse<List<MongoFeedback>> getFeedbacksByDate(LocalDate date) {
+        try {
+            var feedbacks = mongoFeedbackRepository.findByDate(date);
+            if (feedbacks == null) return new BaseResponse<>(true, "No Feedbacks found", null);
+            return new BaseResponse<>(true, "Feedbacks retrieved successfully", feedbacks);
+        } catch (Exception e) {
+            return new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null);
+        }
+    }
+
     @Transactional
     public BaseResponse<MongoFeedback> addFeedback(MongoFeedbackDto feedbackDto) {
         if (feedbackDto.getCustomer()==null || feedbackDto.getComment()==null || feedbackDto.getRating()==null)
