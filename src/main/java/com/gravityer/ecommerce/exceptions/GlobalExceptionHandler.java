@@ -27,6 +27,6 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ItemNotFoundException.class)
     public ResponseEntity<BaseResponse<String>> orderItemNotFound(ItemNotFoundException exception) {
-        return new ResponseEntity<>(new BaseResponse<>(false, "Things didn't worked out...", exception.getMessage()), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(new BaseResponse<>(false, "Not Found...", exception.getMessage()), HttpStatus.NOT_FOUND);
     }
 }

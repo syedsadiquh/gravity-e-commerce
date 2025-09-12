@@ -4,8 +4,10 @@ import com.gravityer.ecommerce.controller.BaseResponse;
 import com.gravityer.ecommerce.dto.AvgRatingCustomerDto;
 import com.gravityer.ecommerce.dto.FeedbackPerCity;
 import com.gravityer.ecommerce.dto.MongoFeedbackDto;
+import com.gravityer.ecommerce.exceptions.ItemNotFoundException;
 import com.gravityer.ecommerce.models.MongoCustomers;
 import com.gravityer.ecommerce.models.MongoFeedback;
+import com.gravityer.ecommerce.repositories.mongo.MongoCustomerRepository;
 import com.gravityer.ecommerce.repositories.mongo.MongoFeedbackRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +17,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -29,51 +33,63 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 public class MongoFeedbackService {
     private final MongoFeedbackRepository mongoFeedbackRepository;
     private final MongoTemplate mongoTemplate;
+    private final MongoCustomerRepository mongoCustomerRepository;
 
-    public BaseResponse<List<MongoFeedback>> getAllFeedbacks() {
+    public ResponseEntity<BaseResponse<List<MongoFeedback>>> getAllFeedbacks() {
         try {
             var feedbacks = mongoFeedbackRepository.findAll();
-            return new BaseResponse<>(true, "Feedbacks retrieved successfully", feedbacks);
-        } catch (Exception e) {
-            return new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null);
-        }
-    }
-
-    public BaseResponse<MongoFeedback> getFeedbackById(String feedbackId) {
-        try {
-            var feedback = mongoFeedbackRepository.findById(feedbackId).orElse(null);
-            if (feedback == null) {
-                return new BaseResponse<>(false, "Feedback not found", null);
+            if  (feedbacks.isEmpty()) {
+                return new ResponseEntity<>(new BaseResponse<>(false, "No Feedbacks found", feedbacks), HttpStatus.OK);
             }
-            return new BaseResponse<>(true, "Feedback retrieved successfully", feedback);
+            return new ResponseEntity<>(new BaseResponse<>(true, "Feedbacks retrieved successfully", feedbacks), HttpStatus.OK);
         } catch (Exception e) {
-            return new BaseResponse<>(false, "Error retrieving feedback: " + e.getMessage(), null);
+            return new ResponseEntity<>(new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public BaseResponse<List<MongoFeedback>> getFeedbacksByCustomerId(String customerId) {
+    public ResponseEntity<BaseResponse<MongoFeedback>> getFeedbackById(String feedbackId) {
         try {
-            var feedbacks = mongoFeedbackRepository.findByCustomer(customerId);
-            return new BaseResponse<>(true, "Feedbacks retrieved successfully", feedbacks);
+            var feedback = mongoFeedbackRepository.findById(new ObjectId(feedbackId)).orElseThrow(
+                    () -> new ItemNotFoundException("Feedback not found with id: " + feedbackId)
+            );
+            return new ResponseEntity<>(new BaseResponse<>(true, "Feedback retrieved successfully", feedback), HttpStatus.OK);
+        } catch (ItemNotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            return new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null);
+            return new ResponseEntity<>(new BaseResponse<>(false, "Error retrieving feedback: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    public BaseResponse<List<MongoFeedback>> getFeedbacksByDate(LocalDate date) {
+    public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbacksByCustomerId(String customerId) {
+        try {
+            var customer = mongoCustomerRepository.findById(new ObjectId(customerId)).orElseThrow(
+                    () -> new ItemNotFoundException("Customer not found with id: " + customerId)
+            );
+            var feedbacks = mongoFeedbackRepository.findByCustomer(new ObjectId(customerId));
+            return new ResponseEntity<>(new BaseResponse<>(true, "Feedbacks retrieved successfully", feedbacks), HttpStatus.OK);
+        } catch (ItemNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            return new ResponseEntity<>(new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbacksByDate(LocalDate date) {
         try {
             var feedbacks = mongoFeedbackRepository.findByDate(date);
-            if (feedbacks == null) return new BaseResponse<>(true, "No Feedbacks found", null);
-            return new BaseResponse<>(true, "Feedbacks retrieved successfully", feedbacks);
+            if (feedbacks.isEmpty()) {
+                return new ResponseEntity<>(new BaseResponse<>(false, "Feedbacks not found", feedbacks), HttpStatus.OK);
+            }
+            return new ResponseEntity<>(new BaseResponse<>(true, "Feedbacks retrieved successfully", feedbacks), HttpStatus.OK);
         } catch (Exception e) {
-            return new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null);
+            return new ResponseEntity<>(new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Transactional
-    public BaseResponse<MongoFeedback> addFeedback(MongoFeedbackDto feedbackDto) {
+    public ResponseEntity<BaseResponse<MongoFeedback>> addFeedback(MongoFeedbackDto feedbackDto) {
         if (feedbackDto.getCustomer()==null || feedbackDto.getComment()==null || feedbackDto.getRating()==null)
-            return new BaseResponse<>(false, "missing contents", null);
+            return new ResponseEntity<>(new BaseResponse<>(false, "missing contents", null), HttpStatus.BAD_REQUEST);
         try {
             var feedback = MongoFeedback.builder()
                     .customer(new ObjectId(feedbackDto.getCustomer()))
@@ -83,78 +99,80 @@ public class MongoFeedbackService {
                     .date(LocalDate.now())
                     .build();
             var savedFeedback = mongoFeedbackRepository.save(feedback);
-            return new BaseResponse<>(true, "Feedback added successfully", savedFeedback);
+            return new ResponseEntity<>(new BaseResponse<>(true, "Feedback added successfully", savedFeedback), HttpStatus.CREATED);
         } catch (Exception e) {
-            return new BaseResponse<>(false, "Error adding feedback: " + e.getMessage(), null);
+            return new ResponseEntity<>(new BaseResponse<>(false, "Error adding feedback: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Transactional
-    public BaseResponse<MongoFeedback> updateFeedback(String customerId, MongoFeedbackDto feedbackDto) {
+    public ResponseEntity<BaseResponse<MongoFeedback>> updateFeedback(String feedbackId, MongoFeedbackDto feedbackDto) {
         try {
-            var existingFeedback = mongoFeedbackRepository.findById(customerId).orElse(null);
-            if (existingFeedback == null) {
-                return new BaseResponse<>(false, "Feedback not found", null);
-            }
+            var existingFeedback = mongoFeedbackRepository.findById(new ObjectId(feedbackId)).orElseThrow(
+                    () -> new ItemNotFoundException("Customer not found with id: " + feedbackId)
+            );
             existingFeedback.setCustomer(new ObjectId(feedbackDto.getCustomer()));
             existingFeedback.setComment(feedbackDto.getComment());
             existingFeedback.setRating(feedbackDto.getRating());
             existingFeedback.setUpdatedAt(LocalDateTime.now());
             var updatedFeedback = mongoFeedbackRepository.save(existingFeedback);
-            return new BaseResponse<>(true, "Feedback updated successfully", updatedFeedback);
+            return new ResponseEntity<>(new BaseResponse<>(true, "Feedback updated successfully", updatedFeedback), HttpStatus.OK);
+        } catch (ItemNotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            return new BaseResponse<>(false, "Error updating feedback: " + e.getMessage(), null);
+            return new ResponseEntity<>(new BaseResponse<>(false, "Error updating feedback: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
     }
 
     @Transactional
-    public BaseResponse<String> deleteFeedback(String feedbackId) {
+    public ResponseEntity<BaseResponse<String>> deleteFeedback(String feedbackId) {
         try {
-            var existingFeedback = mongoFeedbackRepository.findById(feedbackId).orElse(null);
-            if (existingFeedback == null) {
-                return new BaseResponse<>(false, "Feedback not found", null);
-            }
-            mongoFeedbackRepository.deleteById(feedbackId);
-            return new BaseResponse<>(true, "Feedback deleted successfully", feedbackId);
+            var existingFeedback = mongoFeedbackRepository.findById(new ObjectId(feedbackId)).orElseThrow(
+                    () -> new ItemNotFoundException("Feedback not found with id: " + feedbackId)
+            );
+            mongoFeedbackRepository.deleteById(new ObjectId(feedbackId));
+            return new ResponseEntity<>(new BaseResponse<>(true, "Feedback deleted successfully", feedbackId), HttpStatus.OK);
+        } catch (ItemNotFoundException e) {
+            throw e;
         } catch (Exception e) {
-            return new BaseResponse<>(false, "Error deleting feedback: " + e.getMessage(), null);
+            return new ResponseEntity<>(new BaseResponse<>(false, "Error deleting feedback: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // Get feedbacks with rating ≥ 4
-    public BaseResponse<List<MongoFeedback>> getFeedbacksGreaterThanEqualToFour() {
+    public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbacksGreaterThanEqualToFour() {
         try {
             Criteria ratingGt4Criteria = Criteria.where("rating").gte(4);
             Query q = new Query(ratingGt4Criteria);
             var result = mongoTemplate.find(q, MongoFeedback.class);
-            return new BaseResponse<>(true, "Feedbacks retrieved successfully", result);
+            return new ResponseEntity<>(new BaseResponse<>(true, "Feedbacks retrieved successfully", result), HttpStatus.OK);
         } catch (Exception e) {
-            return new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null);
+            return new ResponseEntity<>(new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // Feedbacks from customers who belong to "city"
-    public BaseResponse<List<MongoFeedback>> getFeedbacksFromCity(String city) {
+    public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbacksFromCity(String city) {
         try {
             city = city.strip();
             Criteria cityCriteria = Criteria.where("city").is(city);
             Query cityQuery = new Query(cityCriteria);
             List<MongoCustomers> customersInCity = mongoTemplate.find(cityQuery, MongoCustomers.class);
             List<ObjectId> customerIds = customersInCity.stream().map(MongoCustomers::getId).toList();
-            if (customerIds.isEmpty()) return new BaseResponse<>(true, "No customers found in the specified city", null);
+            if (customerIds.isEmpty()) return new ResponseEntity<>(new BaseResponse<>(false, "Customers not found in the specified city", null), HttpStatus.NOT_FOUND);
 
             Criteria feedbackFromCityCustomers = Criteria.where("customer").in(customerIds);
             Query feedbackFromCityQuery = new Query(feedbackFromCityCustomers);
             var result = mongoTemplate.find(feedbackFromCityQuery, MongoFeedback.class);
-            return new BaseResponse<>(true, "Feedbacks retrieved successfully", result);
+            return new ResponseEntity<>(new BaseResponse<>(true, "Feedbacks retrieved successfully", result), HttpStatus.OK);
         } catch (Exception e) {
-            return new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null);
+            return new ResponseEntity<>(new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // Average Rating per Customer
-    public BaseResponse<List<AvgRatingCustomerDto>> getAvgRatingPerCustomer() {
+    public ResponseEntity<BaseResponse<List<AvgRatingCustomerDto>>> getAvgRatingPerCustomer() {
         try {
             GroupOperation groupByCustomer = group("customer")
                     .avg("rating").as("averageRating")
@@ -184,14 +202,14 @@ public class MongoFeedbackService {
 
             var avgRatings = mongoTemplate.aggregate(aggregation, "feedbacks", AvgRatingCustomerDto.class).getMappedResults();
 
-            return new BaseResponse<>(true, "Average ratings retrieved successfully", avgRatings);
+            return new ResponseEntity<>(new BaseResponse<>(true, "Average ratings retrieved successfully", avgRatings), HttpStatus.OK);
         } catch (Exception e) {
-            return new BaseResponse<>(false, "Error retrieving average ratings: " + e.getMessage(), null);
+            return new ResponseEntity<>(new BaseResponse<>(false, "Error retrieving average ratings: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // total feedbacks per city
-    public BaseResponse<List<FeedbackPerCity>> getTotalFeedbacksPerCity() {
+    public ResponseEntity<BaseResponse<List<FeedbackPerCity>>> getTotalFeedbacksPerCity() {
         try {
             LookupOperation joinCustomers = LookupOperation.newLookup()
                     .from("customers")
@@ -216,9 +234,9 @@ public class MongoFeedbackService {
 
             var feedbacksPerCity = mongoTemplate.aggregate(aggregation, "feedbacks", FeedbackPerCity.class).getMappedResults();
 
-            return new BaseResponse<>(true, "Feedbacks per city retrieved successfully", feedbacksPerCity);
+            return new ResponseEntity<>(new BaseResponse<>(true, "Feedbacks per city retrieved successfully", feedbacksPerCity), HttpStatus.OK);
         } catch (Exception e) {
-            return new BaseResponse<>(false, "Error retrieving feedbacks per city: " + e.getMessage(), null);
+            return new ResponseEntity<>(new BaseResponse<>(false, "Error retrieving feedbacks per city: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
