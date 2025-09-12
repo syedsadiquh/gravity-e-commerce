@@ -1,4 +1,4 @@
-package com.gravityer.ecommerce.repositories;
+package com.gravityer.ecommerce.repositories.jpa;
 
 import com.gravityer.ecommerce.dto.CustomerSpendDto;
 import com.gravityer.ecommerce.dto.ProductSalesDto;
