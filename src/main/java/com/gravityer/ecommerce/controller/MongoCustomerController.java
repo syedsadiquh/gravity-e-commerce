@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,15 +27,11 @@ public class MongoCustomerController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list of customers"),
-            @ApiResponse(responseCode = "404", description = "No customers found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/mongo/getAllCustomers")
     public ResponseEntity<BaseResponse<List<MongoCustomers>>> getAllCustomers() {
-        var res = mongoCustomerService.getAllCustomers();
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return mongoCustomerService.getAllCustomers();
     }
 
     // Getting a single Customer by ID from MongoDB collection (customers)
@@ -51,10 +46,7 @@ public class MongoCustomerController {
     })
     @GetMapping("/mongo/getCustomer/{customerId}")
     public ResponseEntity<BaseResponse<MongoCustomers>> getCustomerById(@PathVariable String customerId) {
-        var res = mongoCustomerService.getCustomersById(customerId);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return mongoCustomerService.getCustomersById(customerId);
     }
 
     // Adding a new Customer to MongoDB collection (customers)
@@ -63,14 +55,12 @@ public class MongoCustomerController {
             description = "Adds a new customer to the MongoDB collection"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Customer added successfully"),
+            @ApiResponse(responseCode = "201", description = "Customer added successfully"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/mongo/addCustomer")
     public ResponseEntity<BaseResponse<MongoCustomers>> addCustomer(@Valid @RequestBody MongoCustomerDto mongoCustomerDto) {
-        var res = mongoCustomerService.addCustomer(mongoCustomerDto);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        return ResponseEntity.internalServerError().body(res);
+        return mongoCustomerService.addCustomer(mongoCustomerDto);
     }
 
     // Updating an existing Customer in MongoDB collection (customers)
@@ -86,11 +76,7 @@ public class MongoCustomerController {
     })
     @PutMapping("/mongo/updateCustomer/{customerId}")
     public ResponseEntity<BaseResponse<MongoCustomers>> updateCustomer(@PathVariable String customerId, @RequestBody MongoCustomerDto mongoCustomerDto) {
-        var res = mongoCustomerService.updateCustomer(customerId, mongoCustomerDto);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        if (res.getMessage().contains("already exists")) return new ResponseEntity<>(res, HttpStatus.CONFLICT);
-        return ResponseEntity.internalServerError().body(res);
+        return mongoCustomerService.updateCustomer(customerId, mongoCustomerDto);
     }
 
     // Deleting a Customer from MongoDB collection (customers)
@@ -105,9 +91,6 @@ public class MongoCustomerController {
     })
     @DeleteMapping("/mongo/deleteCustomer/{customerId}")
     public ResponseEntity<BaseResponse<String>> deleteCustomer(@PathVariable String customerId) {
-        var res = mongoCustomerService.deleteCustomer(customerId);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return mongoCustomerService.deleteCustomer(customerId);
     }
 }

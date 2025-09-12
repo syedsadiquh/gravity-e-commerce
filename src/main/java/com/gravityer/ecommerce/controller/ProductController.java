@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,20 +30,13 @@ public class ProductController {
             description = "Add a new Product to the system"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Product added successfully"),
+            @ApiResponse(responseCode = "201", description = "Product created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/addProduct")
     public ResponseEntity<BaseResponse<Product>> addProduct(@Valid @RequestBody ProductDto productDto) {
-        var response = productService.addProduct(productDto);
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        }
-        if(response.getMessage().contains("Error")) {
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return productService.addProduct(productDto);
     }
 
 
@@ -55,15 +47,11 @@ public class ProductController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list of products"),
-            @ApiResponse(responseCode = "400", description = "Bad request"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/getAllProducts")
     public ResponseEntity<BaseResponse<List<Product>>> getAllProducts() {
-        var response = productService.getProducts();
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        if(response.getMessage().contains("Error")) return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return productService.getProducts();
     }
 
 
@@ -80,11 +68,7 @@ public class ProductController {
     })
     @GetMapping("/getProductById/{productId}")
     public ResponseEntity<BaseResponse<Product>> getProductById(@PathVariable long productId) {
-        var response = productService.getProductById(productId);
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        if (response.getMessage().contains("not found")) return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        if(response.getMessage().contains("Error")) return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return productService.getProductById(productId);
     }
 
     // Update Product
@@ -100,11 +84,7 @@ public class ProductController {
     })
     @PutMapping("/updateProduct/{productId}")
     public ResponseEntity<BaseResponse<Product>> updateProduct(@PathVariable long productId, @RequestBody ProductDto productDto) {
-        var response = productService.updateProduct(productId, productDto);
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        if (response.getMessage().contains("not found")) return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        if (response.getMessage().contains("Error")) return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+       return productService.updateProduct(productId, productDto);
     }
 
     // Delete Product
@@ -120,11 +100,7 @@ public class ProductController {
     })
     @DeleteMapping("/deleteProduct/{productId}")
     public ResponseEntity<BaseResponse<Product>> deleteProduct(@PathVariable long productId) {
-        var response = productService.deleteProduct(productId);
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        if (response.getMessage().contains("not found")) return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        if (response.getMessage().contains("Error")) return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        return productService.deleteProduct(productId);
     }
 
     // List Products (by paging and sorting)
@@ -134,7 +110,6 @@ public class ProductController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list of products"),
-            @ApiResponse(responseCode = "404", description = "No products found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/listProducts")
@@ -146,15 +121,7 @@ public class ProductController {
     ) {
         var sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         var pageable = PageRequest.of(page, size, sort);
-        var res = productService.listProducts(pageable);
-        if (res.isSuccess()) {
-            return new ResponseEntity<>(res, HttpStatus.OK);
-        } else {
-            if (res.getMessage().equals("No Products Exists")) {
-                return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-            }
-            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        return productService.listProducts(pageable);
     }
 
 }

@@ -8,7 +8,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,11 +37,7 @@ public class OrderItemController {
     })
     @PostMapping("/addOrderItem")
     public ResponseEntity<BaseResponse<OrderItem>> addOrderItem(@Valid @RequestBody OrderItemDto orderItemDto) {
-        var response = orderItemService.addOrderItem(orderItemDto);
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        }
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderItemService.addOrderItem(orderItemDto);
     }
 
     // Get All OrderItems
@@ -56,9 +51,7 @@ public class OrderItemController {
     })
     @GetMapping("/getAllOrderItems")
     public ResponseEntity<BaseResponse<List<OrderItem>>> getAllOrderItems() {
-        var response = orderItemService.findAllOrderItems();
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderItemService.findAllOrderItems();
     }
 
     // Get OrderItems by ID
@@ -73,9 +66,7 @@ public class OrderItemController {
     })
     @GetMapping("/getOrderItemById/{orderItemId}")
     public ResponseEntity<BaseResponse<OrderItem>> getOrderItemById(@PathVariable long orderItemId) {
-        var response = orderItemService.findOrderItemsByOrderId(orderItemId);
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderItemService.findOrderItemsByOrderId(orderItemId);
     }
 
     // Update Order Item
@@ -91,9 +82,7 @@ public class OrderItemController {
     })
     @PutMapping("/updateOrderItem/{orderItemId}")
     public ResponseEntity<BaseResponse<OrderItem>> updateProduct(@PathVariable long orderItemId, @Valid @RequestBody OrderItemDto orderItemDto) {
-        var response = orderItemService.updateOrderItem(orderItemId, orderItemDto);
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderItemService.updateOrderItem(orderItemId, orderItemDto);
     }
 
     // Delete Order Item
@@ -108,9 +97,7 @@ public class OrderItemController {
     })
     @DeleteMapping("/deleteOrderItem/{orderItemId}")
     public ResponseEntity<BaseResponse<OrderItem>> deleteProduct(@PathVariable long orderItemId) {
-        var response = orderItemService.deleteOrderItem(orderItemId);
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderItemService.deleteOrderItem(orderItemId);
     }
 
 }

@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,15 +31,11 @@ public class MongoFeedbackController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully retrieved all the feedbacks"),
-            @ApiResponse(responseCode = "404", description = "Feedbacks not found"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
     @GetMapping("/mongo/getAllFeedbacks")
     public ResponseEntity<BaseResponse<List<MongoFeedback>>> getAllFeedbacks() {
-        var res = feedbackService.getAllFeedbacks();
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return feedbackService.getAllFeedbacks();
     }
 
     @Operation(
@@ -49,14 +44,12 @@ public class MongoFeedbackController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully retrieved a feedback"),
+            @ApiResponse(responseCode = "404", description = "Feedback not found"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
     @GetMapping("/mongo/getFeedback/{feedbackId}")
     public ResponseEntity<BaseResponse<MongoFeedback>> getFeedbackById(@PathVariable String feedbackId) {
-        var res = feedbackService.getFeedbackById(feedbackId);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return feedbackService.getFeedbackById(feedbackId);
     }
 
     @Operation(
@@ -70,10 +63,7 @@ public class MongoFeedbackController {
     })
     @GetMapping("/mongo/getFeedbacksByCustomer/{customerId}")
     public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbacksByCustomerId(@PathVariable  String customerId) {
-        var res = feedbackService.getFeedbacksByCustomerId(customerId);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return feedbackService.getFeedbacksByCustomerId(customerId);
     }
 
     @Operation(
@@ -82,16 +72,12 @@ public class MongoFeedbackController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully retrieved a list of feedbacks on a date"),
-            @ApiResponse(responseCode = "404", description = "Feedbacks not found"),
             @ApiResponse(responseCode = "500", description = "Internal Sever Error")
     })
     @GetMapping("/mongo/getFeedbacksByDate/{date}")
     public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbacksByDate(@PathVariable String date) {
         LocalDate localDate = LocalDate.parse(date, DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-        var res = feedbackService.getFeedbacksByDate(localDate);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return feedbackService.getFeedbacksByDate(localDate);
     }
 
     @Operation(
@@ -99,16 +85,13 @@ public class MongoFeedbackController {
             description = "Add a Feedback to the Feedback system"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Added a feedback successfully"),
+            @ApiResponse(responseCode = "201", description = "Added a feedback successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input date"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
     @PostMapping("/mongo/addFeedback")
     public ResponseEntity<BaseResponse<MongoFeedback>> addFeedback(@Valid @RequestBody MongoFeedbackDto feedbackDto) {
-        var res = feedbackService.addFeedback(feedbackDto);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("missing")) return new ResponseEntity<>(res, HttpStatus.BAD_REQUEST);
-        return ResponseEntity.internalServerError().body(res);
+        return feedbackService.addFeedback(feedbackDto);
     }
 
     @Operation(
@@ -123,10 +106,7 @@ public class MongoFeedbackController {
     })
     @PutMapping("/mongo/updateFeedback/{feedbackId}")
     public ResponseEntity<BaseResponse<MongoFeedback>> updateFeedback(@PathVariable String feedbackId, @Valid @RequestBody MongoFeedbackDto feedbackDto) {
-        var res = feedbackService.updateFeedback(feedbackId, feedbackDto);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return feedbackService.updateFeedback(feedbackId, feedbackDto);
     }
 
     @Operation(
@@ -140,10 +120,7 @@ public class MongoFeedbackController {
     })
     @DeleteMapping("/mongo/deleteFeedback/{feedbackId}")
     public ResponseEntity<BaseResponse<String>> deleteFeedback(@PathVariable String feedbackId) {
-        var res = feedbackService.deleteFeedback(feedbackId);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return feedbackService.deleteFeedback(feedbackId);
     }
 
     @Operation(
@@ -156,9 +133,7 @@ public class MongoFeedbackController {
     })
     @GetMapping("/mongo/getFeedbackGteFour")
     public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbackGteFour() {
-        var res = feedbackService.getFeedbacksGreaterThanEqualToFour();
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        return ResponseEntity.internalServerError().body(res);
+        return feedbackService.getFeedbacksGreaterThanEqualToFour();
     }
 
     @Operation(
@@ -167,15 +142,11 @@ public class MongoFeedbackController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully retrieved feedback from a city"),
-            @ApiResponse(responseCode = "404", description = "No Customers found in city"),
             @ApiResponse(responseCode = "500", description = "Internal Server Error")
     })
     @GetMapping("/mongo/getFeedbackFromCity/{city}")
     public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbackFromCity(@PathVariable String city) {
-        var res = feedbackService.getFeedbacksFromCity(city);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return feedbackService.getFeedbacksFromCity(city);
     }
 
     @Operation(
@@ -188,9 +159,7 @@ public class MongoFeedbackController {
     })
     @GetMapping("/mongo/getAvgRatingPerCustomer")
     public ResponseEntity<BaseResponse<List<AvgRatingCustomerDto>>> getAvgRatingPerCustomer() {
-        var res = feedbackService.getAvgRatingPerCustomer();
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        return ResponseEntity.internalServerError().body(res);
+        return feedbackService.getAvgRatingPerCustomer();
     }
 
     @Operation(
@@ -203,9 +172,7 @@ public class MongoFeedbackController {
     })
     @GetMapping("/mongo/getFeedbackCountPerCity")
     public ResponseEntity<BaseResponse<List<FeedbackPerCity>>> getFeedbackCountPerCity() {
-        var res = feedbackService.getTotalFeedbacksPerCity();
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        return ResponseEntity.internalServerError().body(res);
+        return feedbackService.getTotalFeedbacksPerCity();
     }
 
 }

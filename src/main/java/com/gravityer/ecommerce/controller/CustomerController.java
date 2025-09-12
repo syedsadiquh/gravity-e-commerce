@@ -31,9 +31,7 @@ public class CustomerController {
     })
     @GetMapping("/getAllCustomers")
     public ResponseEntity<BaseResponse<List<Customer>>> getAllCustomers() {
-        var res = customerService.getAllCustomers();
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        return ResponseEntity.internalServerError().body(res);
+        return customerService.getAllCustomers();
     }
 
 
@@ -48,10 +46,7 @@ public class CustomerController {
     })
     @GetMapping("/getCustomer/{customerId}")
     public ResponseEntity<BaseResponse<Customer>> getCustomerById(@PathVariable Long customerId) {
-        var res = customerService.getCustomerById(customerId);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().equals("Customer not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return customerService.getCustomerById(customerId);
     }
 
 
@@ -60,14 +55,12 @@ public class CustomerController {
             description = "Add a new Customer to the system"
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully added a customer"),
+            @ApiResponse(responseCode = "201", description = "Successfully created a customer"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/addCustomer")
     public ResponseEntity<BaseResponse<Customer>> addCustomer(@RequestBody CustomerDto customerDto) {
-        var res = customerService.addCustomer(customerDto);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        return ResponseEntity.internalServerError().body(res);
+        return customerService.addCustomer(customerDto);
     }
 
 
@@ -82,10 +75,7 @@ public class CustomerController {
     })
     @PutMapping("/updateCustomer/{customer_id}")
     public ResponseEntity<BaseResponse<Customer>> updateCustomer(@PathVariable Long customer_id ,@RequestBody CustomerDto customerDto) {
-        var res = customerService.updateCustomer(customer_id,customerDto);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return customerService.updateCustomer(customer_id,customerDto);
     }
 
 
@@ -100,10 +90,7 @@ public class CustomerController {
     })
     @DeleteMapping("/deleteCustomer/{customer_id}")
     public ResponseEntity<BaseResponse<Customer>> deleteCustomer(@PathVariable Long customer_id) {
-        var res = customerService.deleteCustomer(customer_id);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        if (res.getMessage().contains("not found")) return new ResponseEntity<>(res, HttpStatus.NOT_FOUND);
-        return ResponseEntity.internalServerError().body(res);
+        return customerService.deleteCustomer(customer_id);
     }
 
 
@@ -117,9 +104,7 @@ public class CustomerController {
     })
     @GetMapping("/getCustomersWithMoreThanThreeOrders")
     public ResponseEntity<BaseResponse<List<Customer>>> getCustomersWithMoreThanThreeOrders() {
-        var res = customerService.getCustomersWithMoreThanThreeOrders();
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        return ResponseEntity.internalServerError().body(res);
+        return customerService.getCustomersWithMoreThanThreeOrders();
     }
 
 }

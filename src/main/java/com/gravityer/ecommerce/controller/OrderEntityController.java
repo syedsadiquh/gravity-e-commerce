@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,18 +30,14 @@ public class OrderEntityController {
             description = "Add a new Order to the system"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "OrderEntity added successfully"),
+            @ApiResponse(responseCode = "201", description = "OrderEntity created successfully"),
             @ApiResponse(responseCode = "404", description = "Related Customer or Product not found"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/addOrderEntity")
     public ResponseEntity<BaseResponse<OrderEntity>> addOrderEntity(@Valid @RequestBody AddOrderEntityDto addOrderEntityDto) {
-        var response = orderEntityService.addOrderEntity(addOrderEntityDto);
-        if (response.isSuccess()) {
-            return ResponseEntity.ok(response);
-        }
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderEntityService.addOrderEntity(addOrderEntityDto);
     }
 
     // Get All OrderEntity
@@ -56,9 +51,7 @@ public class OrderEntityController {
     })
     @GetMapping("/getAllOrderEntity")
     public ResponseEntity<BaseResponse<List<OrderEntity>>> getAllOrderEntity() {
-        var response = orderEntityService.getAllOrderEntity();
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderEntityService.getAllOrderEntity();
     }
 
     // Get OrderEntity by ID
@@ -73,10 +66,7 @@ public class OrderEntityController {
     })
     @GetMapping("/getOrderEntityById/{orderEntityId}")
     public ResponseEntity<BaseResponse<OrderEntity>> getOrderEntityById(@PathVariable long orderEntityId) {
-        var response = orderEntityService.getOrderEntityById(orderEntityId);
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        if (response.getMessage().contains("not found")) return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderEntityService.getOrderEntityById(orderEntityId);
     }
 
     // Update Order Entity
@@ -92,9 +82,7 @@ public class OrderEntityController {
     })
     @PutMapping("/updateOrderEntity/{orderEntityId}")
     public ResponseEntity<BaseResponse<OrderEntity>> updateOrderEntity(@PathVariable long orderEntityId, @Valid @RequestBody AddOrderEntityDto addOrderEntityDto) {
-        var response = orderEntityService.updateOrderEntity(orderEntityId, addOrderEntityDto);
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderEntityService.updateOrderEntity(orderEntityId, addOrderEntityDto);
     }
 
     // Delete Order Entity
@@ -109,9 +97,7 @@ public class OrderEntityController {
     })
     @DeleteMapping("/deleteOrderEntity/{orderEntityId}")
     public ResponseEntity<BaseResponse<OrderEntity>>deleteOrderEntity(@PathVariable long orderEntityId) {
-        var response = orderEntityService.deleteOrderEntity(orderEntityId);
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderEntityService.deleteOrderEntity(orderEntityId);
     }
 
     // Getting Order with all customer and product details
@@ -125,9 +111,7 @@ public class OrderEntityController {
     })
     @GetMapping("/getOrdersWithDetails")
     public ResponseEntity<BaseResponse<List<OrderDetailDto>>> getOrdersWithCustomerAndProductDetails() {
-        var response = orderEntityService.getOrdersWithCustomerAndProductDetails();
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderEntityService.getOrdersWithCustomerAndProductDetails();
     }
     
     // total spend per customer
@@ -141,9 +125,7 @@ public class OrderEntityController {
     })
     @GetMapping("/getTotalSpendPerCustomer")
     public ResponseEntity<BaseResponse<List<CustomerSpendDto>>> getTotalSpendPerCustomer() {
-        var response = orderEntityService.getTotalSpendPerCustomer();
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderEntityService.getTotalSpendPerCustomer();
     }
     
     // total sales per product
@@ -157,9 +139,7 @@ public class OrderEntityController {
     })
     @GetMapping("/getTotalSalesPerProduct")
     public ResponseEntity<BaseResponse<List<ProductSalesDto>>> getTotalSalesPerProduct() {
-        var response = orderEntityService.getTotalSalesPerProduct();
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderEntityService.getTotalSalesPerProduct();
     }
 
     // get orders by customer id
@@ -173,9 +153,7 @@ public class OrderEntityController {
     })
     @GetMapping("/getOrdersByCustomerId/{customerId}")
     public ResponseEntity<BaseResponse<List<OrderEntity>>> getOrdersByCustomerId(@PathVariable Long customerId) {
-        var response = orderEntityService.getOrdersByCustomerId(customerId);
-        if (response.isSuccess()) return ResponseEntity.ok(response);
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        return orderEntityService.getOrdersByCustomerId(customerId);
     }
 
     /*
@@ -198,8 +176,9 @@ public class OrderEntityController {
             description = "Create a new order with associated order items for a customer"
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Successfully placed the order"),
+            @ApiResponse(responseCode = "201", description = "Successfully placed the order"),
             @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "404", description = "Customer or Product not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/placeOrder")
@@ -221,8 +200,6 @@ public class OrderEntityController {
             )
             @RequestBody PlaceOrderDto placeOrderDto
     ) {
-        var res = orderEntityService.placeOrder(placeOrderDto);
-        if (res.isSuccess()) return ResponseEntity.ok(res);
-        return ResponseEntity.internalServerError().body(res);
+        return orderEntityService.placeOrder(placeOrderDto);
     }
 }
