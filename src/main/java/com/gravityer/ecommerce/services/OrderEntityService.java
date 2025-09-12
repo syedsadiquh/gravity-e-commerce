@@ -30,7 +30,7 @@ public class OrderEntityService {
     public BaseResponse<List<OrderEntity>> getAllOrderEntity() {
         try {
             List<OrderEntity> orderEntities = orderEntityRepository.findAll();
-            if (orderEntities.isEmpty()) return new BaseResponse<>(true, "No Order Entities Found", null);
+            if (orderEntities.isEmpty()) return new BaseResponse<>(true, "No Order Entities Found", orderEntities);
             return new BaseResponse<>(true, "All Order Entity found", orderEntities);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -80,8 +80,7 @@ public class OrderEntityService {
     @Transactional
     public BaseResponse<OrderEntity> updateOrderEntity(Long id, AddOrderEntityDto addOrderEntityDto) {
 
-        OrderEntity orderEntity = orderEntityRepository.findById(id).orElse(null);
-        if (orderEntity == null) return new BaseResponse<>(false, "Order Entity not Found", null);
+        OrderEntity orderEntity = orderEntityRepository.findById(id).orElseThrow(() -> new ItemNotFoundException("Order Entity not found with id: " + id));
 
         Customer customer = customerRepository.findById(addOrderEntityDto.getCustomer_id())
                 .orElseThrow(() -> new ItemNotFoundException("Customer not found with id: " + addOrderEntityDto.getCustomer_id()));
@@ -113,8 +112,7 @@ public class OrderEntityService {
     @Transactional
     public BaseResponse<OrderEntity> deleteOrderEntity(Long id) {
         try {
-            OrderEntity orderEntity = orderEntityRepository.findById(id).orElse(null);
-            if (orderEntity == null) return new BaseResponse<>(false, "Order Entity not Found", null);
+            OrderEntity orderEntity = orderEntityRepository.findById(id).orElseThrow(() -> new ItemNotFoundException("Order Entity not found with id: " + id));
             orderEntityRepository.delete(orderEntity);
             return new BaseResponse<>(true, "Order Entity Deleted Successfully", orderEntity);
         } catch (Exception e) {

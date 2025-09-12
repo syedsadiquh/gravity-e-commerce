@@ -22,7 +22,7 @@ public class MongoCustomerService {
     public BaseResponse<List<MongoCustomers>> getAllCustomers() {
         try {
             var result = mongoCustomerRepository.findAll();
-            if (result.isEmpty()) return new BaseResponse<>(true, "No customers found", result);
+            if (result.isEmpty()) return new BaseResponse<>(true, "Customers not found", result);
             return new BaseResponse<>(true, "Fetched all customers", result);
         } catch (Exception e) {
             return new BaseResponse<>(false, "Something went wrong: " + e.getMessage(), null);
@@ -32,7 +32,7 @@ public class MongoCustomerService {
     public BaseResponse<MongoCustomers> getCustomersById(String id) {
         try {
             var result = mongoCustomerRepository.findById(id).orElse(null);
-            if (result == null) return new BaseResponse<>(true, "No customers found", null);
+            if (result == null) return new BaseResponse<>(true, "Customer not found", null);
             return new BaseResponse<>(true, "Fetched customer with id: "+id, result);
         } catch (Exception e) {
             return new BaseResponse<>(false, "Something went wrong: " + e.getMessage(), null);

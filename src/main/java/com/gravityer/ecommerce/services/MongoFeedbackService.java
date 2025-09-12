@@ -15,6 +15,8 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -33,6 +35,7 @@ public class MongoFeedbackService {
     public BaseResponse<List<MongoFeedback>> getAllFeedbacks() {
         try {
             var feedbacks = mongoFeedbackRepository.findAll();
+            if  (feedbacks.isEmpty()) return new BaseResponse<>(false, "Feedbacks not found", feedbacks);
             return new BaseResponse<>(true, "Feedbacks retrieved successfully", feedbacks);
         } catch (Exception e) {
             return new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null);
@@ -63,7 +66,7 @@ public class MongoFeedbackService {
     public BaseResponse<List<MongoFeedback>> getFeedbacksByDate(LocalDate date) {
         try {
             var feedbacks = mongoFeedbackRepository.findByDate(date);
-            if (feedbacks == null) return new BaseResponse<>(true, "No Feedbacks found", null);
+            if (feedbacks == null) return new BaseResponse<>(false, "Feedbacks not found", null);
             return new BaseResponse<>(true, "Feedbacks retrieved successfully", feedbacks);
         } catch (Exception e) {
             return new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null);
@@ -142,7 +145,7 @@ public class MongoFeedbackService {
             Query cityQuery = new Query(cityCriteria);
             List<MongoCustomers> customersInCity = mongoTemplate.find(cityQuery, MongoCustomers.class);
             List<ObjectId> customerIds = customersInCity.stream().map(MongoCustomers::getId).toList();
-            if (customerIds.isEmpty()) return new BaseResponse<>(true, "No customers found in the specified city", null);
+            if (customerIds.isEmpty()) return new BaseResponse<>(false, "Customers not found in the specified city", null);
 
             Criteria feedbackFromCityCustomers = Criteria.where("customer").in(customerIds);
             Query feedbackFromCityQuery = new Query(feedbackFromCityCustomers);

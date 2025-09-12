@@ -38,8 +38,7 @@ public class OrderItemService {
 
     public BaseResponse<OrderItem> findOrderItemsByOrderId(Long orderItemId) {
         try {
-            var orderItem = orderItemRepository.findById(orderItemId).orElse(null);
-            if (orderItem == null) return new BaseResponse<>(true, "Order Item not found", null);
+            var orderItem = orderItemRepository.findById(orderItemId).orElseThrow(() -> new ItemNotFoundException("Order Item not found"));
             return new BaseResponse<>(true, "Order Items found", orderItem);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
@@ -86,8 +85,7 @@ public class OrderItemService {
     @Transactional
     public BaseResponse<OrderItem> deleteOrderItem(Long orderItem_id) {
         try {
-            var result = orderItemRepository.findById(orderItem_id).orElse(null);
-            if (result == null) return new BaseResponse<>(false, "Order Item Not Found", null);
+            var result = orderItemRepository.findById(orderItem_id).orElseThrow(() -> new ItemNotFoundException("Order Item not found"));
             orderItemRepository.deleteById(orderItem_id);
             return new BaseResponse<>(true, "Order Item Deleted Successfully", result);
         } catch (Exception e) {
