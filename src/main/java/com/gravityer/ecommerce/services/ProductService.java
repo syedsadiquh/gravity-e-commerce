@@ -8,6 +8,7 @@ import com.gravityer.ecommerce.repositories.jpa.ProductRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -28,18 +29,14 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ProductHelper productHelper;
 
     public ResponseEntity<BaseResponse<List<Product>>> getProducts() {
         try {
-            if (redisTemplate.hasKey("ProductCache::allProducts")) {
-                var cachedProducts = (List<Product>) redisTemplate.opsForValue().get("ProductCache::allProducts");
-                return new ResponseEntity<>(new BaseResponse<>(true, "All Products from Cache", cachedProducts), HttpStatus.OK);
-            }
-            var result = productRepository.findAll();
+            var result = productHelper.getProductsImp();
             if (result.isEmpty()) {
                 return new ResponseEntity<>(new BaseResponse<>(true, "Product List Empty", result), HttpStatus.OK);
             }
-            redisTemplate.opsForValue().set("ProductCache::allProducts", result, Duration.ofMinutes(5));
             return new ResponseEntity<>(new BaseResponse<>(true, "All Products", productRepository.findAll()), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new BaseResponse<>(false, "Unable to get all products", null), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -48,16 +45,10 @@ public class ProductService {
 
     public ResponseEntity<BaseResponse<Product>> getProductById(long productId) {
         try {
-            if (redisTemplate.opsForHash().hasKey("ProductCache::product", productId)) {
-                var cachedProduct = (Product) redisTemplate.opsForHash().get("ProductCache::product", productId);
-                return new ResponseEntity<>(new BaseResponse<>(true, "Product with id: " + productId + " from Cache", cachedProduct), HttpStatus.OK);
-            }
-            var product = productRepository.findById(productId).orElse(null);
+            var product = productHelper.getProductById(productId);
             if (product == null) {
                 return new ResponseEntity<>(new BaseResponse<>(false , "Product not found", null), HttpStatus.NOT_FOUND);
             }
-            redisTemplate.opsForHash().put("ProductCache::product", productId, product);
-            redisTemplate.opsForHash().expire("ProductCache::product", Duration.ofMinutes(5), Collections.singleton(String.valueOf(productId)));
             return new ResponseEntity<>(new BaseResponse<>(true, "Product with id: " + productId, product), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new BaseResponse<>(false, "Internal Server Error", null), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -69,12 +60,7 @@ public class ProductService {
         try{
             Product product = productMapper.toEntity(productDto);
             product.setCreatedAt(LocalDateTime.now());
-            productRepository.saveAndFlush(product);
-
-            redisTemplate.opsForHash().put("ProductCache::product", product.getId(), product);
-            redisTemplate.opsForHash().expire("ProductCache::product", Duration.ofMinutes(5), Collections.singleton(product.getId().toString()));
-
-
+            product = productHelper.saveProduct(product);
             return new ResponseEntity<>(new BaseResponse<>(true, "Product Created", product), HttpStatus.CREATED);
         } catch(Exception e){
             log.error(e.getMessage());
@@ -90,15 +76,7 @@ public class ProductService {
             product.setName(productDto.getName());
             product.setPrice(productDto.getPrice());
             product.setUpdatedAt(LocalDateTime.now());
-            var res = productRepository.saveAndFlush(product);
-
-            if(redisTemplate.opsForHash().hasKey("ProductCache::product", productId)) {
-                redisTemplate.opsForHash().delete("ProductCache::product", productId);
-                redisTemplate.opsForHash().put("ProductCache::product", productId, res);
-                redisTemplate.opsForHash().expire("ProductCache::product", Duration.ofMinutes(5), Collections.singleton(String.valueOf(productId)));
-
-            }
-
+            var res = productHelper.updateProduct(product);
             return new ResponseEntity<>(new BaseResponse<>(true, "Product Updated", res), HttpStatus.OK);
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -109,11 +87,8 @@ public class ProductService {
     @Transactional
     public ResponseEntity<BaseResponse<Product>> deleteProduct(long productId) {
         try {
-            var res = productRepository.deleteProductById(productId);
+            var res = productHelper.deleteProductById(productId);
             if (res == 1) {
-                if(redisTemplate.opsForHash().hasKey("ProductCache::product", productId)) {
-                    redisTemplate.opsForHash().delete("ProductCache::product", productId);
-                }
                 return new ResponseEntity<>(new BaseResponse<>(true, "Product Deleted Successfully", null), HttpStatus.OK);
             }
             return new ResponseEntity<>(new BaseResponse<>(false, "Product not found", null), HttpStatus.NOT_FOUND);
@@ -125,13 +100,8 @@ public class ProductService {
 
     public ResponseEntity<BaseResponse<Page<Product>>> listProducts(PageRequest pageable) {
         try {
-            if (redisTemplate.hasKey("ProductCache::listProducts:"+pageable.getPageNumber()+":"+pageable.getPageSize())) {
-                var cachedProducts = (Page<Product>) redisTemplate.opsForValue().get("ProductCache::listProducts:"+pageable.getPageNumber()+":"+pageable.getPageSize());
-                return new ResponseEntity<>(new BaseResponse<>(true, "All Products from Cache", cachedProducts), HttpStatus.OK);
-            }
-            var res = productRepository.findAll(pageable);
+            var res = productHelper.getListOfProducts(pageable);
             if (res.isEmpty()) return new ResponseEntity<>(new BaseResponse<>(true, "No Products Exists", res), HttpStatus.OK);
-            redisTemplate.opsForValue().set("ProductCache::listProducts:"+pageable.getPageNumber()+":"+pageable.getPageSize(), res, Duration.ofMinutes(5));
             return new ResponseEntity<>(new BaseResponse<>(true, "All Products", res), HttpStatus.OK);
         } catch (Exception e) {
             log.error(e.getMessage());
