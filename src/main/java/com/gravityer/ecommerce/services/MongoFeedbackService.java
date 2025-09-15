@@ -17,13 +17,17 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
@@ -33,6 +37,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 public class MongoFeedbackService {
     private final MongoFeedbackRepository mongoFeedbackRepository;
     private final MongoTemplate mongoTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final MongoCustomerRepository mongoCustomerRepository;
 
     public ResponseEntity<BaseResponse<List<MongoFeedback>>> getAllFeedbacks() {
@@ -156,6 +161,14 @@ public class MongoFeedbackService {
     public ResponseEntity<BaseResponse<List<MongoFeedback>>> getFeedbacksFromCity(String city) {
         try {
             city = city.strip();
+
+            if (redisTemplate.opsForHash().hasKey("FeedbackCache::feedbackFromCity", city)) {
+                var cachedData = (List<MongoFeedback>) redisTemplate.opsForHash().get("FeedbackCache::feedbackFromCity:", city);
+                if (cachedData != null) {
+                    return new ResponseEntity<>(new BaseResponse<>(true, "Feedbacks retrieved successfully (from cache)", cachedData), HttpStatus.OK);
+                }
+            }
+
             Criteria cityCriteria = Criteria.where("city").is(city);
             Query cityQuery = new Query(cityCriteria);
             List<MongoCustomers> customersInCity = mongoTemplate.find(cityQuery, MongoCustomers.class);
@@ -165,6 +178,10 @@ public class MongoFeedbackService {
             Criteria feedbackFromCityCustomers = Criteria.where("customer").in(customerIds);
             Query feedbackFromCityQuery = new Query(feedbackFromCityCustomers);
             var result = mongoTemplate.find(feedbackFromCityQuery, MongoFeedback.class);
+
+            redisTemplate.opsForHash().put("FeedbackCache::feedbackFromCity", city, result);
+            redisTemplate.opsForHash().expire("FeedbackCache::feedbackFromCity:", Duration.ofMinutes(5), Collections.singleton(city));
+
             return new ResponseEntity<>(new BaseResponse<>(true, "Feedbacks retrieved successfully", result), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new BaseResponse<>(false, "Error retrieving feedbacks: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -174,6 +191,12 @@ public class MongoFeedbackService {
     // Average Rating per Customer
     public ResponseEntity<BaseResponse<List<AvgRatingCustomerDto>>> getAvgRatingPerCustomer() {
         try {
+            if (redisTemplate.hasKey("FeedbackCache::avgRatingsPerCustomer")) {
+                var cachedData = (List<AvgRatingCustomerDto>) redisTemplate.opsForValue().get("FeedbackCache::avgRatingsPerCustomer");
+                if (cachedData != null) {
+                    return new ResponseEntity<>(new BaseResponse<>(true, "Average ratings retrieved successfully (from cache)", cachedData), HttpStatus.OK);
+                }
+            }
             GroupOperation groupByCustomer = group("customer")
                     .avg("rating").as("averageRating")
                     .first("customerDetails").as("customerInfo");
@@ -202,6 +225,8 @@ public class MongoFeedbackService {
 
             var avgRatings = mongoTemplate.aggregate(aggregation, "feedbacks", AvgRatingCustomerDto.class).getMappedResults();
 
+            redisTemplate.opsForValue().set("FeedbackCache::avgRatingsPerCustomer", avgRatings, Duration.ofMinutes(5));
+
             return new ResponseEntity<>(new BaseResponse<>(true, "Average ratings retrieved successfully", avgRatings), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new BaseResponse<>(false, "Error retrieving average ratings: " + e.getMessage(), null), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -211,6 +236,12 @@ public class MongoFeedbackService {
     // total feedbacks per city
     public ResponseEntity<BaseResponse<List<FeedbackPerCity>>> getTotalFeedbacksPerCity() {
         try {
+            if (redisTemplate.hasKey("FeedbackCache::totalFeedbacksPerCity")) {
+                var cachedData = (List<FeedbackPerCity>) redisTemplate.opsForValue().get("FeedbackCache::totalFeedbacksPerCity");
+                if (cachedData != null) {
+                    return new ResponseEntity<>(new BaseResponse<>(true, "Feedbacks per city retrieved successfully (from cache)", cachedData), HttpStatus.OK);
+                }
+            }
             LookupOperation joinCustomers = LookupOperation.newLookup()
                     .from("customers")
                     .localField("customer")
@@ -233,6 +264,8 @@ public class MongoFeedbackService {
             );
 
             var feedbacksPerCity = mongoTemplate.aggregate(aggregation, "feedbacks", FeedbackPerCity.class).getMappedResults();
+
+            redisTemplate.opsForValue().set("FeedbackCache::totalFeedbacksPerCity", feedbacksPerCity, Duration.ofMinutes(5));
 
             return new ResponseEntity<>(new BaseResponse<>(true, "Feedbacks per city retrieved successfully", feedbacksPerCity), HttpStatus.OK);
         } catch (Exception e) {
