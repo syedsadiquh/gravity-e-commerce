@@ -21,9 +21,8 @@ public class AppUsersController {
         return appUserService.registerUser(registerDto);
     }
 
-    @PostMapping("/verifyLogin")
-    public String verifyLogin(@RequestBody AppUser appUser) {
-        log.info("Entered Verify Login Controller");
-        return appUserService.verifyLogin(appUser);
+    @PostMapping("/login")
+    public String login(@RequestBody AppUser appUser) {
+        return appUserService.login(appUser);
     }
 }

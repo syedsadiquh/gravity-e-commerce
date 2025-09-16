@@ -22,6 +22,7 @@ public class AppUserService {
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final AppUserRepository appUserRepository;
+    private final JwtService jwtService;
 
     public AppUser registerUser(RegisterDto registerDto) {
         AppUser appUser = AppUser.builder()
@@ -42,13 +43,13 @@ public class AppUserService {
         return appUserRepository.save(appUser);
     }
 
-    public String verifyLogin(AppUser appUser) {
+    public String login(AppUser appUser) {
         log.info("Entered Verify Login");
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(appUser.getUsername(), appUser.getPassword()));
         if (authentication.isAuthenticated()) {
-            return "User is authenticated";
-        } else {
-            return "Authentication failed";
+            return "TOKEN : " + jwtService.generateToken(((AppUserPrincipal) authentication.getPrincipal()));
         }
+        return "Authentication failed";
+
     }
 }
