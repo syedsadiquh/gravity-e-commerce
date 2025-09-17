@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,6 +51,7 @@ public class ProductController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/getAllProducts")
+    @PreAuthorize("hasRole('ADMIN')")       // Only admin
     public ResponseEntity<BaseResponse<List<Product>>> getAllProducts() {
         return productService.getProducts();
     }
@@ -99,6 +101,7 @@ public class ProductController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @DeleteMapping("/deleteProduct/{productId}")
+    @PreAuthorize("hasRole('USER')")       // Only user
     public ResponseEntity<BaseResponse<Product>> deleteProduct(@PathVariable long productId) {
         return productService.deleteProduct(productId);
     }
